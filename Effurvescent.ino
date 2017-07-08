@@ -1,15 +1,26 @@
 #include "Arduino.h"
 #include <FastLED.h>
 
-const unsigned int TOUCH_R_PIN = 15;
-const unsigned int TOUCH_G_PIN = 16;
-const unsigned int TOUCH_B_PIN = 18;
+const unsigned int FAST_PIN = 15;
+const unsigned int SLOW_PIN = 16;
+const unsigned int BRIGHT_PIN = 18;
+
+enum ButtonState {
+	BUTTON_NONE,
+	BUTTON_FAST,
+	BUTTON_SLOW,
+	BUTTON_BRIGHT
+};
+
+unsigned int brightnessIndex = 3;
+unsigned int BRIGHTNESS_TABLE[] = {32, 50, 64};
+unsigned int BRIGHTNESS_COUNT = 3;
 
 const float TOUCH_THRESH_MULTIPLIER = 2.0;
 
-int touchRBaseline = 0;
-int touchGBaseline = 0;
-int touchBBaseline = 0;
+int fastBaseline = 0;
+int slowBaseline = 0;
+int brightBaseline = 0;
 
 const unsigned int NUM_LEDS = 60;
 const unsigned int LEDS_PER_COLUMN = 12;
@@ -20,13 +31,13 @@ CRGB leds[NUM_LEDS];
 void setup() {
   Serial.begin(57600);
 
-  touchRead(TOUCH_R_PIN);
-  touchRead(TOUCH_G_PIN);
-  touchRead(TOUCH_B_PIN);
+  touchRead(FAST_PIN);
+  touchRead(SLOW_PIN);
+  touchRead(BRIGHT_PIN);
   delay(10);
-  touchRBaseline = touchRead(TOUCH_R_PIN) * TOUCH_THRESH_MULTIPLIER;
-  touchGBaseline = touchRead(TOUCH_G_PIN) * TOUCH_THRESH_MULTIPLIER;
-  touchBBaseline = touchRead(TOUCH_B_PIN) * TOUCH_THRESH_MULTIPLIER;
+  fastBaseline = touchRead(FAST_PIN) * TOUCH_THRESH_MULTIPLIER;
+  slowBaseline = touchRead(SLOW_PIN) * TOUCH_THRESH_MULTIPLIER;
+  brightBaseline = touchRead(BRIGHT_PIN) * TOUCH_THRESH_MULTIPLIER;
 
   FastLED.addLeds<NEOPIXEL, LED_OUT_PIN>(leds, NUM_LEDS);
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 400);
@@ -94,6 +105,12 @@ unsigned int addWithCeiling(unsigned int a, unsigned int b) {
 	return a + b;
 }
 
+ButtonState buttonState = BUTTON_NONE;
+ButtonState prevButtonState = BUTTON_NONE;
+
+const unsigned long BUTTON_PRESS_DELAY = 500;
+unsigned long buttonPressAt = 0;
+
 void loop() {
 	for (unsigned long i=0; i<12; i++) {
 		setPixelColor(0, i, CHSV(sin8(colorCounter + i * 2) - 6, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
@@ -108,11 +125,58 @@ void loop() {
 	colorSubCounter++;
 	if (colorSubCounter > COLOR_STEPS) {
 		colorSubCounter = 0;
-		colorCounter++;
+		colorCounter--;
 	}
 	moveCounter += 2;
 	FastLED.delay(50);
 
+	bool slow = touchRead(SLOW_PIN) > slowBaseline;
+	bool fast = touchRead(FAST_PIN) > fastBaseline;
+	bool bright = touchRead(BRIGHT_PIN) > brightBaseline;
+
+	if (slow && fast || slow && bright || fast && bright) {
+		// More than one button pressed - ignore
+		buttonState = BUTTON_NONE;
+	} else {
+		if (slow) {
+			buttonState = BUTTON_SLOW;
+		} else if (fast) {
+			buttonState = BUTTON_FAST;
+		} else if (bright) {
+			buttonState = BUTTON_BRIGHT;
+		} else {
+			buttonState = BUTTON_NONE;
+		}
+	}
+
+	if (buttonState != prevButtonState) {
+		buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+	} else {
+		if (millis() > buttonPressAt) {
+			switch (buttonState) {
+			case BUTTON_SLOW:
+				// TODO
+				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+				break;
+			case BUTTON_FAST:
+				// TODO
+				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+				break;
+			case BUTTON_BRIGHT:
+				brightnessIndex = (brightnessIndex + 1) % BRIGHTNESS_COUNT;
+				FastLED.setBrightness(BRIGHTNESS_TABLE[brightnessIndex]);
+
+				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+				break;
+			case BUTTON_NONE:
+			default:
+				// No-op
+				break;
+			}
+		}
+	}
+
+	prevButtonState = buttonState;
   /*if (touchRead(TOUCH_R_PIN) > touchRBaseline) {
     setAllColor(CRGB::Red);
   } else if (touchRead(TOUCH_G_PIN) > touchGBaseline) {
