@@ -5,12 +5,7 @@ const unsigned int FAST_PIN = 15;
 const unsigned int SLOW_PIN = 16;
 const unsigned int BRIGHT_PIN = 18;
 
-enum ButtonState {
-	BUTTON_NONE,
-	BUTTON_FAST,
-	BUTTON_SLOW,
-	BUTTON_BRIGHT
-};
+enum ButtonState { BUTTON_NONE, BUTTON_FAST, BUTTON_SLOW, BUTTON_BRIGHT };
 
 enum Pattern {
   PATTERN_SLOW,
@@ -47,43 +42,43 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, LED_OUT_PIN>(leds, NUM_LEDS);
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 400);
   FastLED.setBrightness(64);
-  //FastLED.setDither( 0 );
+  // FastLED.setDither( 0 );
 
   setAllColor(CRGB::Black);
 }
 
 void setAllColor(CRGB color) {
-  for (unsigned int i=0; i<NUM_LEDS; i++) {
+  for (unsigned int i = 0; i < NUM_LEDS; i++) {
     leds[i] = color;
   }
 }
 
 void setRowColor(int row, CRGB color) {
-	leds[LEDS_PER_COLUMN - row - 1] = color;
-	leds[LEDS_PER_COLUMN + row] = color;
-	leds[LEDS_PER_COLUMN * 3 - row - 1] = color;
-	leds[LEDS_PER_COLUMN * 3 + row] = color;
-	leds[LEDS_PER_COLUMN * 5 - row - 1] = color;
+  leds[LEDS_PER_COLUMN - row - 1] = color;
+  leds[LEDS_PER_COLUMN + row] = color;
+  leds[LEDS_PER_COLUMN * 3 - row - 1] = color;
+  leds[LEDS_PER_COLUMN * 3 + row] = color;
+  leds[LEDS_PER_COLUMN * 5 - row - 1] = color;
 }
 
 void setPixelColor(int col, int row, CRGB color) {
-	switch (col) {
-	case 0:
-		leds[LEDS_PER_COLUMN - row - 1] = color;
-		break;
-	case 1:
-		leds[LEDS_PER_COLUMN + row] = color;
-		break;
-	case 2:
-		leds[LEDS_PER_COLUMN * 3 - row - 1] = color;
-		break;
-	case 3:
-		leds[LEDS_PER_COLUMN * 3 + row] = color;
-		break;
-	case 4:
-		leds[LEDS_PER_COLUMN * 5 - row - 1] = color;
-		break;
-	}
+  switch (col) {
+  case 0:
+    leds[LEDS_PER_COLUMN - row - 1] = color;
+    break;
+  case 1:
+    leds[LEDS_PER_COLUMN + row] = color;
+    break;
+  case 2:
+    leds[LEDS_PER_COLUMN * 3 - row - 1] = color;
+    break;
+  case 3:
+    leds[LEDS_PER_COLUMN * 3 + row] = color;
+    break;
+  case 4:
+    leds[LEDS_PER_COLUMN * 5 - row - 1] = color;
+    break;
+  }
 }
 
 unsigned int colorCounter = 0;
@@ -96,10 +91,10 @@ const unsigned int MOVE_SIZE = 40;
 const unsigned int MOVE_DC_OFFSET = 40;
 
 unsigned int addWithCeiling(unsigned int a, unsigned int b) {
-	if (0l + a + b > 255) {
-		return 255;
-	}
-	return a + b;
+  if (0l + a + b > 255) {
+    return 255;
+  }
+  return a + b;
 }
 
 ButtonState buttonState = BUTTON_NONE;
@@ -110,22 +105,37 @@ const unsigned long BUTTON_PRESS_DELAY = 500;
 unsigned long buttonPressAt = 0;
 
 void doSlowPattern() {
-	for (unsigned long i=0; i<12; i++) {
-		setPixelColor(0, i, CHSV(sin8(colorCounter + i * 2) - 6, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
-		setPixelColor(1, i, CHSV(sin8(colorCounter + i * 2) - 3, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
-		setPixelColor(2, i, CHSV(sin8(colorCounter + i * 2), 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
-		setPixelColor(3, i, CHSV(sin8(colorCounter + i * 2) - 3, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
-		setPixelColor(4, i, CHSV(sin8(colorCounter + i * 2) - 6, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
-	}
+  for (unsigned long i = 0; i < 12; i++) {
+    setPixelColor(0, i,
+                  CHSV(sin8(colorCounter + i * 2) - 6, 255,
+                       addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE),
+                                      MOVE_DC_OFFSET)));
+    setPixelColor(1, i,
+                  CHSV(sin8(colorCounter + i * 2) - 3, 255,
+                       addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE),
+                                      MOVE_DC_OFFSET)));
+    setPixelColor(2, i,
+                  CHSV(sin8(colorCounter + i * 2), 255,
+                       addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE),
+                                      MOVE_DC_OFFSET)));
+    setPixelColor(3, i,
+                  CHSV(sin8(colorCounter + i * 2) - 3, 255,
+                       addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE),
+                                      MOVE_DC_OFFSET)));
+    setPixelColor(4, i,
+                  CHSV(sin8(colorCounter + i * 2) - 6, 255,
+                       addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE),
+                                      MOVE_DC_OFFSET)));
+  }
 
-	FastLED.show();
+  FastLED.show();
 
-	colorSubCounter++;
-	if (colorSubCounter > COLOR_STEPS) {
-		colorSubCounter = 0;
-		colorCounter--;
-	}
-	moveCounter += 2;
+  colorSubCounter++;
+  if (colorSubCounter > COLOR_STEPS) {
+    colorSubCounter = 0;
+    colorCounter--;
+  }
+  moveCounter += 2;
 }
 
 void doFastPattern() {
@@ -140,81 +150,81 @@ void doFastPattern() {
     offColor = CHSV(0, 255, 255);
   }
 
-  for (int i=0; i<3; i++) {
+  for (int i = 0; i < 3; i++) {
     setRowColor(i, onColor);
   }
-  for (int i=3; i<6; i++) {
+  for (int i = 3; i < 6; i++) {
     setRowColor(i, offColor);
   }
-  for (int i=6; i<9; i++) {
+  for (int i = 6; i < 9; i++) {
     setRowColor(i, onColor);
   }
-  for (int i=9; i<12; i++) {
+  for (int i = 9; i < 12; i++) {
     setRowColor(i, offColor);
   }
 
-	FastLED.show();
+  FastLED.show();
   checker = !checker;
 }
 
 void loop() {
   switch (currentPattern) {
-    case PATTERN_SLOW:
-    default:
-      doSlowPattern();
-      break;
-    
-    case PATTERN_FAST:
-      doFastPattern();
-      break;
+  case PATTERN_SLOW:
+  default:
+    doSlowPattern();
+    break;
+
+  case PATTERN_FAST:
+    doFastPattern();
+    break;
   }
-	FastLED.delay(50);
+  FastLED.delay(50);
 
-	bool slow = touchRead(SLOW_PIN) > slowBaseline;
-	bool fast = touchRead(FAST_PIN) > fastBaseline;
-	bool bright = touchRead(BRIGHT_PIN) > brightBaseline;
+  bool slow = touchRead(SLOW_PIN) > slowBaseline;
+  bool fast = touchRead(FAST_PIN) > fastBaseline;
+  bool bright = touchRead(BRIGHT_PIN) > brightBaseline;
 
-	if (slow && fast || slow && bright || fast && bright) {
-		// More than one button pressed - ignore
-		buttonState = BUTTON_NONE;
-	} else {
-		if (slow) {
-			buttonState = BUTTON_SLOW;
-		} else if (fast) {
-			buttonState = BUTTON_FAST;
-		} else if (bright) {
-			buttonState = BUTTON_BRIGHT;
-		} else {
-			buttonState = BUTTON_NONE;
-		}
-	}
+  if (slow && fast || slow && bright || fast && bright) {
+    // More than one button pressed - ignore
+    buttonState = BUTTON_NONE;
+  } else {
+    if (slow) {
+      buttonState = BUTTON_SLOW;
+    } else if (fast) {
+      buttonState = BUTTON_FAST;
+    } else if (bright) {
+      buttonState = BUTTON_BRIGHT;
+    } else {
+      buttonState = BUTTON_NONE;
+    }
+  }
 
-	if (buttonState != prevButtonState) {
-		buttonPressAt = millis() + BUTTON_PRESS_DELAY;
-	} else {
-		if (millis() > buttonPressAt) {
-			switch (buttonState) {
-			case BUTTON_SLOW:
+  if (buttonState != prevButtonState) {
+    buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+  } else {
+    if (millis() > buttonPressAt) {
+      switch (buttonState) {
+      case BUTTON_SLOW:
         currentPattern = PATTERN_SLOW;
-				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
-				break;
-			case BUTTON_FAST:
+        buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+        break;
+      case BUTTON_FAST:
         currentPattern = PATTERN_FAST;
-				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
-				break;
-			case BUTTON_BRIGHT:
-				brightnessIndex = (brightnessIndex + 1) % BRIGHTNESS_COUNT;
-				FastLED.setBrightness(BRIGHTNESS_TABLE[brightnessIndex]);
+        buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+        break;
+      case BUTTON_BRIGHT:
+        brightnessIndex = (brightnessIndex + 1) % BRIGHTNESS_COUNT;
+        FastLED.setBrightness(BRIGHTNESS_TABLE[brightnessIndex]);
 
-				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
-				break;
-			case BUTTON_NONE:
-			default:
-				// No-op
-				break;
-			}
-		}
-	}
+        buttonPressAt = millis() + BUTTON_PRESS_DELAY;
+        break;
+      case BUTTON_NONE:
+      default:
+        // No-op
+        break;
+      }
+    }
+  }
 
-	prevButtonState = buttonState;
+  prevButtonState = buttonState;
 }
