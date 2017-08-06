@@ -12,9 +12,14 @@ enum ButtonState {
 	BUTTON_BRIGHT
 };
 
+enum Pattern {
+  PATTERN_SLOW,
+  PATTERN_FAST,
+};
+
 unsigned int brightnessIndex = 3;
-unsigned int BRIGHTNESS_TABLE[] = {32, 50, 64};
-unsigned int BRIGHTNESS_COUNT = 3;
+unsigned int BRIGHTNESS_TABLE[] = {32, 50, 64, 80};
+unsigned int BRIGHTNESS_COUNT = 4;
 
 const float TOUCH_THRESH_MULTIPLIER = 2.0;
 
@@ -45,14 +50,6 @@ void setup() {
   //FastLED.setDither( 0 );
 
   setAllColor(CRGB::Black);
-  /*setAllColor(CRGB::Red);
-  delay(500);
-  setAllColor(CRGB::Green);
-  delay(500);
-  setAllColor(CRGB::Blue);
-  delay(500);
-  setAllColor(CRGB::Black);
-  delay(500);*/
 }
 
 void setAllColor(CRGB color) {
@@ -107,11 +104,12 @@ unsigned int addWithCeiling(unsigned int a, unsigned int b) {
 
 ButtonState buttonState = BUTTON_NONE;
 ButtonState prevButtonState = BUTTON_NONE;
+Pattern currentPattern = PATTERN_SLOW;
 
 const unsigned long BUTTON_PRESS_DELAY = 500;
 unsigned long buttonPressAt = 0;
 
-void loop() {
+void doSlowPattern() {
 	for (unsigned long i=0; i<12; i++) {
 		setPixelColor(0, i, CHSV(sin8(colorCounter + i * 2) - 6, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
 		setPixelColor(1, i, CHSV(sin8(colorCounter + i * 2) - 3, 255, addWithCeiling(cubicwave8(moveCounter + i * MOVE_SIZE), MOVE_DC_OFFSET)));
@@ -128,6 +126,48 @@ void loop() {
 		colorCounter--;
 	}
 	moveCounter += 2;
+}
+
+void doFastPattern() {
+  static boolean checker = false;
+  CHSV onColor;
+  CHSV offColor;
+  if (checker) {
+    onColor = CHSV(0, 255, 255);
+    offColor = CHSV(0, 255, 0);
+  } else {
+    onColor = CHSV(0, 255, 0);
+    offColor = CHSV(0, 255, 255);
+  }
+
+  for (int i=0; i<3; i++) {
+    setRowColor(i, onColor);
+  }
+  for (int i=3; i<6; i++) {
+    setRowColor(i, offColor);
+  }
+  for (int i=6; i<9; i++) {
+    setRowColor(i, onColor);
+  }
+  for (int i=9; i<12; i++) {
+    setRowColor(i, offColor);
+  }
+
+	FastLED.show();
+  checker = !checker;
+}
+
+void loop() {
+  switch (currentPattern) {
+    case PATTERN_SLOW:
+    default:
+      doSlowPattern();
+      break;
+    
+    case PATTERN_FAST:
+      doFastPattern();
+      break;
+  }
 	FastLED.delay(50);
 
 	bool slow = touchRead(SLOW_PIN) > slowBaseline;
@@ -155,11 +195,11 @@ void loop() {
 		if (millis() > buttonPressAt) {
 			switch (buttonState) {
 			case BUTTON_SLOW:
-				// TODO
+        currentPattern = PATTERN_SLOW;
 				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
 				break;
 			case BUTTON_FAST:
-				// TODO
+        currentPattern = PATTERN_FAST;
 				buttonPressAt = millis() + BUTTON_PRESS_DELAY;
 				break;
 			case BUTTON_BRIGHT:
@@ -177,11 +217,4 @@ void loop() {
 	}
 
 	prevButtonState = buttonState;
-  /*if (touchRead(TOUCH_R_PIN) > touchRBaseline) {
-    setAllColor(CRGB::Red);
-  } else if (touchRead(TOUCH_G_PIN) > touchGBaseline) {
-    setAllColor(CRGB::Green);
-  } else if (touchRead(TOUCH_B_PIN) > touchBBaseline) {
-    setAllColor(CRGB::Blue);
-  }*/
 }
