@@ -99,7 +99,7 @@ unsigned int addWithCeiling(unsigned int a, unsigned int b) {
 
 ButtonState buttonState = BUTTON_NONE;
 ButtonState prevButtonState = BUTTON_NONE;
-Pattern currentPattern = PATTERN_SLOW;
+Pattern currentPattern = PATTERN_FAST;
 
 const unsigned long BUTTON_PRESS_DELAY = 500;
 unsigned long buttonPressAt = 0;
@@ -140,14 +140,22 @@ void doSlowPattern() {
 
 void doFastPattern() {
   static boolean checker = false;
+  static unsigned int tick = 0;
+
+  if (tick++ > 3) {
+  	checker = !checker;
+  	tick = 0;
+  }
+
   CHSV onColor;
   CHSV offColor;
+  unsigned int rawColor = sin8(colorCounter);
   if (checker) {
-    onColor = CHSV(0, 255, 255);
-    offColor = CHSV(0, 255, 0);
+    onColor = CHSV(rawColor, 255, 255);
+    offColor = CHSV(rawColor, 255, 0);
   } else {
-    onColor = CHSV(0, 255, 0);
-    offColor = CHSV(0, 255, 255);
+    onColor = CHSV(rawColor, 255, 0);
+    offColor = CHSV(rawColor, 255, 255);
   }
 
   for (int i = 0; i < 3; i++) {
@@ -164,7 +172,12 @@ void doFastPattern() {
   }
 
   FastLED.show();
-  checker = !checker;
+
+  colorSubCounter++;
+	if (colorSubCounter > COLOR_STEPS) {
+		colorSubCounter = 0;
+		colorCounter--;
+	}
 }
 
 void loop() {
